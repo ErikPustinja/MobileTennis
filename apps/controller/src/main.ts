@@ -319,7 +319,8 @@ Object.assign(window, {
           const elapsed = performance.now() - start;
           while (i < trace.samples.length && trace.samples[i]!.t - t0 <= elapsed) {
             const s = trace.samples[i++]!;
-            handleSample({ t: performance.now(), accel: s.accel, accelG: s.accelG, rot: s.rot, orient: s.orient });
+            // Keep the recording's own spacing even if timers fire in bursts.
+            handleSample({ t: start + (s.t - t0), accel: s.accel, accelG: s.accelG, rot: s.rot, orient: s.orient });
           }
           if (i < trace.samples.length) setTimeout(step, 4);
           else resolve(i);

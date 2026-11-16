@@ -25,6 +25,10 @@ export default defineConfig({
         // Expose real host candidates instead of mDNS names, which cannot be
         // resolved on CI machines. See docs/ARCHITECTURE.md (local network).
         '--disable-features=WebRtcHideLocalIpsWithMdns',
+        // Several pages (game + phones) run at once; keep background pages at full speed.
+        '--disable-background-timer-throttling',
+        '--disable-renderer-backgrounding',
+        '--disable-backgrounding-occluded-windows',
       ],
     },
     trace: 'retain-on-failure',
