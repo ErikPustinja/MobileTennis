@@ -3,9 +3,10 @@ import { computed } from 'vue';
 import type { Side } from '@mobitenis/sim';
 import { PLAYER_COLORS, PLAYER_NAMES } from '../colors.ts';
 import type { UiState } from '../game/ui-state.ts';
+import QrCode from './QrCode.vue';
 import { REASON_TEXT } from './texts.ts';
 
-const props = defineProps<{ side: Side; ui: UiState; status: string; controls: string }>();
+const props = defineProps<{ side: Side; ui: UiState; status: string; controls: string; returnUrl?: string | null }>();
 const other = computed<Side>(() => (props.side === 0 ? 1 : 0));
 const color = computed(() => PLAYER_COLORS[props.side]);
 const myTurnToServe = computed(() => props.ui.server === props.side && props.ui.phase === 'serveReady');
@@ -32,6 +33,10 @@ const message = computed(() => {
       <span class="sets">Setovi {{ ui.sets[side] }}:{{ ui.sets[other] }}</span>
     </header>
     <p v-if="message" class="message" :data-testid="`message-${side}`">{{ message }}</p>
+    <div v-if="returnUrl" class="return" :data-testid="`return-qr-${side}`">
+      <QrCode :text="returnUrl" :size="200" />
+      <p>Skeniraj za povratak u igru</p>
+    </div>
     <footer class="foot">
       <span class="status">{{ status }}</span>
       <span class="controls">{{ controls }}</span>
@@ -79,6 +84,18 @@ const message = computed(() => {
   font-size: clamp(14px, 1.4vw, 24px);
   font-weight: 600;
   text-align: center;
+}
+.return {
+  z-index: 5;
+  align-self: center;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  background: rgb(0 0 0 / 70%);
+  text-align: center;
+}
+.return p {
+  margin: 0.4rem 0 0;
 }
 .foot {
   margin-top: auto;

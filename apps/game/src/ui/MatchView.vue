@@ -14,6 +14,7 @@ const props = defineProps<{
   sides: Side[];
   status: Record<Side, string>;
   controls: Record<Side, string>;
+  returnUrls?: Record<Side, string | null>;
 }>();
 const emit = defineEmits<{ resume: []; rematch: []; home: [] }>();
 
@@ -34,9 +35,17 @@ const canResume = computed(
       <SceneContent :session="session" :sides="sides" />
     </TresCanvas>
     <div class="huds">
-      <Hud v-for="side in sides" :key="side" :side="side" :ui="ui" :status="status[side]" :controls="controls[side]" />
+      <Hud
+        v-for="side in sides"
+        :key="side"
+        :side="side"
+        :ui="ui"
+        :status="status[side]"
+        :controls="controls[side]"
+        :return-url="returnUrls?.[side] ?? null"
+      />
     </div>
-    <div v-if="ui.paused" class="overlay" data-testid="pause">
+    <div v-if="ui.paused" class="overlay" :class="{ banner: !canResume }" data-testid="pause">
       <div class="panel">
         <h2>{{ pauseText }}</h2>
         <slot name="pause" />
@@ -85,6 +94,10 @@ const canResume = computed(
   display: grid;
   place-items: center;
   background: rgb(5 8 14 / 55%);
+}
+.overlay.banner {
+  inset: auto 0 3rem 0;
+  background: none;
 }
 .panel {
   min-width: 22rem;
