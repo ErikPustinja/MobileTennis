@@ -10,6 +10,8 @@ export default tseslint.config(
   {
     files: ['**/*.vue'],
     languageOptions: { parserOptions: { parser: tseslint.parser } },
+    // TypeScript already checks undefined names in .vue files.
+    rules: { 'no-undef': 'off' },
   },
   {
     rules: {

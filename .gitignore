@@ -8,3 +8,5 @@ playwright-report/
 *.keystore
 *.jks
 .DS_Store
+apps/*/test-results/
+apps/*/playwright-report/

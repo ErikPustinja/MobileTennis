@@ -75,3 +75,47 @@ match.events; // what happened in that step (hit, bounce, net, point, set, …)
   serve changes every two points and every point from 10:10, best of three.
 - **Determinism.** No clocks, no `Math.random`. The bot has its own seeded
   PRNG. Tests replay a seeded bot match twice and compare the full point log.
+
+## Rendering and split screen (`apps/game`)
+
+- `GameSession` owns one `MatchState` and advances it from real elapsed time
+  in fixed 1/120 s steps (at most 0.25 s per frame), so the simulation speed
+  never depends on the frame rate. Inputs come from `InputSource`s
+  (keyboard, bot, later phones), one per player.
+- The scene is built from TresJS components using only basic Three.js
+  geometry (boxes, planes, cylinders, capsules, spheres). Moving objects
+  (ball, paddles, characters, arms) are updated imperatively once per frame
+  from the match state, outside Vue reactivity.
+- **One scene, two views.** `SceneContent.vue` replaces the TresJS render
+  function: it renders the same scene twice into one canvas with scissor
+  rectangles, once per player camera. The shadow map is rendered once per
+  frame and shared by both views. Before each view, the own character's
+  materials are made translucent and the opponent's opaque.
+- Each camera sits behind its player, above and over the left shoulder.
+  The vertical field of view is derived from the viewport aspect so the
+  near end of the table fits even in a narrow half (`scene/layout.ts`).
+- The HUD is plain HTML over the canvas: one panel per half with the
+  player's colour border, score, sets, messages and status.
+- A hidden tab pauses the match (`visibilitychange`). Esc toggles a manual
+  pause; Space or the button resumes.
+
+### Keyboard test controls
+
+| | Player 1 | Player 2 |
+|---|---|---|
+| Serve | W | I |
+| Sideways (and aim) | A / D | J / L |
+| Forehand | E | O |
+| Backhand | Q | U |
+| Strong shot (hold) | Left Shift | Right Shift |
+
+Keys are read by physical code (`KeyboardEvent.code`), so a Croatian QWERTZ
+keyboard works the same way.
+
+### End-to-end tests
+
+`apps/game/e2e` (Playwright, headless Chromium with SwiftShader). Test hooks
+are exposed on `window.__mobitenis` (match state, stats) and
+`window.__mobitenisScene` (views, paddle position projected into each
+player's camera). The keyboard test drives both players by dispatching real
+`KeyboardEvent`s timed from the simulation's own prediction.
