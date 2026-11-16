@@ -1,0 +1,19 @@
+{
+  "name": "@mobitenis/controller",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --port 5174",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mobitenis/net": "workspace:*",
+    "@mobitenis/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}

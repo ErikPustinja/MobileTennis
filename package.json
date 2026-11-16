@@ -1,0 +1,28 @@
+{
+  "name": "mobitenis",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @mobitenis/game dev",
+    "dev:controller": "pnpm --filter @mobitenis/controller dev",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "vitest run",
+    "build": "pnpm -r build && node scripts/assemble.mjs",
+    "e2e": "pnpm --filter @mobitenis/game e2e",
+    "size": "node scripts/size.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.15.0",
+    "eslint-plugin-vue": "10.12.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.0"
+  }
+}
