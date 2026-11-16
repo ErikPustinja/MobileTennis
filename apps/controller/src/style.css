@@ -1,0 +1,117 @@
+:root {
+  --c: #5b6577;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #10141c;
+  color: #f2f4f8;
+  font-family: system-ui, Roboto, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+#app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 6px solid var(--c);
+}
+.chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.8rem;
+  background: var(--c);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+#conn {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.join {
+  display: grid;
+  gap: 0.6rem;
+}
+[hidden] {
+  display: none !important;
+}
+.join label {
+  display: grid;
+  gap: 0.3rem;
+}
+input,
+select {
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid #3a4456;
+  background: #1a2130;
+  color: inherit;
+  font-size: 1.3rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.message {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 1.05rem;
+}
+.warnings {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #ffcf6e;
+}
+.warnings:empty {
+  display: none;
+}
+.actions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+button {
+  padding: 1rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: #2d3646;
+  color: #f2f4f8;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+button:disabled {
+  opacity: 0.4;
+}
+#serve {
+  background: #3ad07a;
+  color: #08130c;
+}
+body.calibrated #serve {
+  flex: 1;
+  min-height: 45vh;
+  font-size: 2.4rem;
+}
+body.calibrated #sensors {
+  display: none;
+}
+.diag summary {
+  padding: 0.4rem 0;
+  opacity: 0.8;
+}
+.diag pre {
+  margin: 0.4rem 0;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  user-select: text;
+}

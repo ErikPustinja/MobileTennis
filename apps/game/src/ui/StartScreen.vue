@@ -34,7 +34,7 @@ const sides: Side[] = [0, 1];
 .start {
   min-height: 100%;
   box-sizing: border-box;
-  padding: 1.5rem;
+  padding: 3.2rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;

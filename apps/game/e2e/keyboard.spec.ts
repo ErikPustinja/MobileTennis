@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { startAutoplay, stats, stopAutoplay } from './helpers.ts';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?signal=ws://127.0.0.1:9000/&stun=none');
   await page.getByTestId('play-keyboard').click();
   await expect(page.getByTestId('hud-0')).toBeVisible();
   await expect(page.getByTestId('hud-1')).toBeVisible();

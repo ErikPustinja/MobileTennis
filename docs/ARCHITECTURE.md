@@ -119,3 +119,96 @@ are exposed on `window.__mobitenis` (match state, stats) and
 `window.__mobitenisScene` (views, paddle position projected into each
 player's camera). The keyboard test drives both players by dispatching real
 `KeyboardEvent`s timed from the simulation's own prediction.
+
+## Phone connection (`packages/protocol`, `packages/net`)
+
+```
+phone (controller page)  ── WebRTC DataChannels (direct) ──>  desktop browser (game)
+          │                                                         │
+          └──────── PeerJS signalling server (pairing only) ────────┘
+```
+
+- **Pairing.** The game registers `mobitenis-v1-<ROOM>` on a PeerJS
+  signalling server (default: the free public `0.peerjs.com`). The QR code
+  links to `<site>/c/#r=<ROOM>&s=<slot>&t=<token>`; the hash is never sent to
+  a server. The phone sends a WebRTC offer through signalling, the game
+  answers, and from then on all traffic is direct. `signaling.ts` is a
+  ~150-line client for the PeerJS server protocol behind a small `Signaling`
+  interface, so the server can be swapped (tests run a local PeerJS server).
+- **Two channels per phone.** `samples`: unordered, `maxRetransmits: 0`.
+  `commands`: reliable and ordered, JSON.
+- **Samples** are fixed 64-byte binary messages (`packages/protocol/src/sample.ts`):
+  type, protocol version, flags, sequence number, phone time (0.1 ms units),
+  a 32-bit key derived from the slot token, and four float32 triples
+  (acceleration, acceleration with gravity, rotation rate, orientation).
+  The phone sends one per `devicemotion` event and skips sending while the
+  channel's `bufferedAmount` is above 1 KiB.
+- **Commands** (`serve`, `calibrate`) carry a unique id. The game acks every
+  copy but runs each id once; the phone resends unacknowledged commands after
+  reconnecting, so a command is neither lost nor run twice. Joining a slot is
+  the `hello` message (room, slot, token, client id, protocol version).
+- **Validation.** The game ignores everything on a link until a valid
+  `hello` (known protocol version, right room, valid token). Samples must
+  carry the slot's key, a sequence number above the last accepted one and,
+  once the clock offset is known, be at most 100 ms old.
+- **Clock and ping.** The game pings each phone every second on the reliable
+  channel. The round trip gives the ping, and the reply's phone timestamp
+  gives the phone-to-game clock offset (taken from the fastest recent round
+  trip), which is what makes the 100 ms age check possible.
+- **Slots and reconnect.** Each slot has a one-time token in its QR link. The
+  phone stores room, slot, token and its client id in `localStorage`. When a
+  link drops, the game keeps the slot reserved for 30 s and the phone starts
+  reconnecting after 250 ms (well within 1 s) with the same token and client
+  id. Another phone using the same token is rejected. After 30 s the slot is
+  released with a new token and a new QR code.
+- **Manual code entry.** Without a QR link the phone can type the 5-letter
+  room code; the game assigns a free slot and returns its token.
+
+### Direct connection on the local network
+
+Only public STUN is configured, no TURN. Known risk and what the game does
+about it:
+
+- Desktop Chrome replaces private IPs in its ICE host candidates with random
+  `.local` mDNS names; the other side has to resolve them over multicast DNS.
+- Chrome on Android has historically *not* hidden its LAN address on Wi-Fi.
+  In that case the desktop receives the phone's real private IP, its
+  connectivity checks reach the phone, and the phone learns the desktop's
+  address as a peer-reflexive candidate. The pair is host-to-host on the LAN.
+- If both sides hide their addresses and mDNS multicast is blocked (some
+  routers, guest networks, "AP/client isolation"), the only remaining path is
+  via the public (STUN, server-reflexive) addresses, which needs the router
+  to support NAT hairpinning. Chrome's own measurements attributed most of
+  the connection-rate loss from mDNS to exactly this case.
+- With client isolation enabled the phone and computer cannot talk at all;
+  without TURN that is a hard failure and the game says so (ICE failed:
+  connect both to the same Wi-Fi, the network may block WebRTC).
+- The diagnostics panel shows the connection type of the selected candidate
+  pair: **lokalna mreža** (both ends host/private), **preko javne adrese**
+  (server-reflexive, through the router's public address) or **preko
+  posrednika** (relay; cannot happen without TURN).
+- CI runs Chromium with `--disable-features=WebRtcHideLocalIpsWithMdns`,
+  because CI machines cannot resolve mDNS names. That flag is a test-only
+  setting; real phones and desktops use their defaults.
+
+Checking this on a real home network is a manual step (`needs-human`).
+
+### Diagnostics and sensor recording
+
+Press **F2** (or the ⚙ button) in the game. Per slot it shows sample rate
+(game side and phone side), per-axis value ranges, dropped samples (stale,
+out of order, wrong key, skipped on the phone), connection type and ping.
+The phone has the same diagnostics under "Dijagnostika".
+
+"Snimi senzore" asks the phone to record up to 60 s of raw samples
+locally; the phone then sends the whole recording over the reliable channel
+and the game downloads it as `<label>.json` in the trace format described
+in `fixtures/traces/README.md`. The phone can also record and download a
+trace by itself.
+
+### Gestures (first version)
+
+`GestureRecognizer` in `packages/sim/src/gesture.ts` currently treats a
+sideways move (acceleration then braking) as one gesture that only moves the
+paddle in its own direction, and detects a swing by an acceleration
+threshold. Phase 5 refines it with the gyroscope and recorded traces.
