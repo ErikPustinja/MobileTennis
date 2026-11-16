@@ -166,4 +166,44 @@ export const BOT = {
   serveDelayMax: 1.4,
 } as const;
 
-/** Gesture constants are added in phase 5 (see GESTURE in this file). */
+/**
+ * Gesture recognition (packages/sim/src/gesture.ts). Axes are the player's:
+ * right, up and forward (toward the table), derived from the phone's
+ * gravity direction at calibration. Rotation rates are in deg/s.
+ */
+export const GESTURE = {
+  /** Forward acceleration that starts a swing (m/s²). Sideways moves never count. */
+  swingStart: 12,
+  /** Longest wait for the acceleration peak before the swing is reported (ms). */
+  swingPeakWait: 50,
+  /** Forward acceleration mapped to strength 0 (m/s²). */
+  swingMinAccel: 12,
+  /** Forward acceleration mapped to strength 1 (m/s²). */
+  swingMaxAccel: 48,
+  /** No new swing and no sideways tracking for this long after a swing (ms). */
+  swingRefractory: 350,
+  /** Typical sideways/forward acceleration ratio of a straight swing; aim is measured against it. */
+  swingSweepRatio: 0.35,
+  /** Aim sensitivity: change in sideways/forward ratio for full aim. */
+  swingAimRange: 0.5,
+  /** Yaw rate that decides forehand vs backhand when it is clear enough (deg/s). */
+  strokeYawRate: 120,
+  /** Sideways acceleration that starts a paddle shift (m/s²). */
+  shiftStart: 1.5,
+  /** Shift ends after acceleration stays below this… (m/s²) */
+  shiftQuiet: 0.6,
+  /** …for this long (ms). */
+  shiftQuietTime: 100,
+  /** A shift never lasts longer than this (ms). */
+  shiftMaxTime: 1000,
+  /** Rotation faster than this means a wrist turn, not a whole-arm shift (deg/s). */
+  shiftMaxRotation: 120,
+  /** Rotation that cancels a shift already in progress (deg/s). */
+  shiftAbortRotation: 200,
+  /** Sideways distance that moves the paddle one lateral unit (m); range is -1 … 1. */
+  shiftMetresPerUnit: 0.25,
+  /** Maximum paddle face tilt from the phone's tilt (rad). */
+  maxPitch: 0.6,
+  /** Fraction of the phone's tilt passed to the paddle face. */
+  pitchGain: 0.5,
+} as const;

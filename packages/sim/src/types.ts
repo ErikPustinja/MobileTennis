@@ -8,6 +8,8 @@ export interface SwingIntent {
   strength: number;
   /** Sideways swing direction from the player's own perspective, -1 (left) … 1 (right). */
   direction: number;
+  /** Forehand or backhand; when omitted the paddle side decides (right = forehand). */
+  stroke?: 'forehand' | 'backhand';
 }
 
 /**
@@ -50,6 +52,7 @@ export interface Swing {
   planeZ: number;
   endTime: number;
   hit: boolean;
+  forehand: boolean;
 }
 
 export interface PaddleState {
