@@ -216,6 +216,7 @@ function startSwing(state: MatchState, p: PlayerState, intent: SwingIntent): voi
     planeZ,
     endTime: contactTime + PADDLE.followThrough / speed,
     hit: false,
+    forehand: intent.stroke ? intent.stroke === 'forehand' : p.lateral >= 0,
   };
 }
 
@@ -395,7 +396,7 @@ export function stepMatch(state: MatchState, inputs: readonly [PlayerInput, Play
             direction: sw.direction,
             timingError: sw.timingError,
             pitch: p.pitch,
-            forehand: p.lateral >= 0,
+            forehand: sw.forehand,
           };
           const shot = r.phase === 'toss' ? serveShot(params) : rallyShot(params);
           ball.vel.x = shot.vel.x;

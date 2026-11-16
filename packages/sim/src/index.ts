@@ -8,4 +8,4 @@ export { rallyShot, serveShot, type ShotParams } from './shot.ts';
 export { newScore, currentServer, awardPoint, validateScore } from './score.ts';
 export { createMatch, resetMatch, setPaused, stepMatch, predictCrossing, defaultConfig } from './match.ts';
 export { Bot, type BotOptions } from './bot.ts';
-export { GestureRecognizer, type GestureOutput, type MotionSample } from './gesture.ts';
+export { GestureRecognizer, frameFromGravity, type GestureOutput, type GestureState, type MotionSample } from './gesture.ts';

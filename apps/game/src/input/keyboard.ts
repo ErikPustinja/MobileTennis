@@ -60,7 +60,11 @@ export class KeyboardInput implements InputSource {
     input.lateral = Math.max(-1, Math.min(1, this.stance + dir * NUDGE));
     input.serve = k.consume(m.serve);
     if (fh || bh) {
-      input.swing = { strength: k.isDown(m.strong) ? STRONG_STRENGTH : NORMAL_STRENGTH, direction: dir * AIM };
+      input.swing = {
+        strength: k.isDown(m.strong) ? STRONG_STRENGTH : NORMAL_STRENGTH,
+        direction: dir * AIM,
+        stroke: fh ? 'forehand' : 'backhand',
+      };
     }
     return input;
   }

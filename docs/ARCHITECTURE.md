@@ -206,9 +206,38 @@ and the game downloads it as `<label>.json` in the trace format described
 in `fixtures/traces/README.md`. The phone can also record and download a
 trace by itself.
 
-### Gestures (first version)
+### Gestures (`packages/sim/src/gesture.ts`)
 
-`GestureRecognizer` in `packages/sim/src/gesture.ts` currently treats a
-sideways move (acceleration then braking) as one gesture that only moves the
-paddle in its own direction, and detects a swing by an acceleration
-threshold. Phase 5 refines it with the gyroscope and recorded traces.
+Recognition runs in the game, on raw samples, so it can be tuned and tested
+on recordings. Constants are in `GESTURE` in `packages/sim/src/config.ts`.
+
+- **Player axes from calibration.** "Kalibriraj" stores the gravity
+  direction in phone coordinates. Up is opposite to gravity; forward is the
+  direction out of the back of the phone (screen facing the player),
+  flattened to horizontal; right = forward × up. Every sample is projected
+  onto these axes, so the phone can be held upright, sideways or tilted.
+  Before calibration the default assumes upright, screen facing the player.
+- **Paddle shift (bočni pomak).** Sideways acceleration above 1.5 m/s² with
+  little rotation starts a shift. The recogniser integrates the sideways
+  acceleration twice, but the paddle only ever moves in the gesture's own
+  direction, so the braking at the end of the move cannot throw it back.
+  The shift ends after 100 ms of quiet. 25 cm of arm travel is one lateral
+  unit (the range is -1 … 1).
+- **Wrist turn vs arm move.** The gyroscope separates them: rotation above
+  120 deg/s prevents a shift from starting, and above 200 deg/s cancels one
+  in progress.
+- **Swing.** Only *forward* acceleration (toward the table) above 12 m/s²
+  starts a swing, so no sideways positioning can fire a shot. The swing is
+  reported at its acceleration peak, at most 50 ms after it starts.
+  Strength maps the peak from 12 m/s² (0) to 48 m/s² (1). Forehand vs
+  backhand comes from the mean yaw rate (forehand turns left for a right
+  hander), falling back to the sideways direction of the swing. Aim is the
+  sideways/forward ratio compared with a straight swing.
+- **Racket angle.** The change of the phone's front/back tilt since
+  calibration (half of it, at most ±0.6 rad) tilts the racket face.
+- Tests in `gesture.test.ts` play the traces from `fixtures/traces/` and
+  check direction without a rebound, wrist turns, holding still, forehand
+  and backhand at both strengths, that shifting never swings, and that a
+  phone held in landscape gives the same result. The traces are synthetic
+  until real recordings arrive (needs-human issue #6); real ones get the same
+  expectations.
