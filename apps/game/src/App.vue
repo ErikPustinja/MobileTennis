@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
-import { Bot, type MatchEvent, type Side } from '@mobitenis/sim';
+import { Bot, type MatchConfig, type MatchEvent, type Side } from '@mobitenis/sim';
 import type { PhoneState, SensorTrace, Slot } from '@mobitenis/protocol';
 import { GameSession } from './game/session.ts';
 import { bindUi, createUiState } from './game/ui-state.ts';
@@ -24,6 +24,18 @@ let unbind: (() => void) | null = null;
 const stats = { hits: [0, 0] as [number, number], points: 0 };
 
 const hub = new PhoneHub(hubConfigFromLocation());
+
+/** Optional shorter matches: `?points=5&sets=1` (points per set, sets to win). */
+function matchConfigFromLocation(): Partial<MatchConfig> {
+  const q = new URLSearchParams(location.search);
+  const cfg: Partial<MatchConfig> = {};
+  const points = Number(q.get('points'));
+  const sets = Number(q.get('sets'));
+  if (Number.isInteger(points) && points >= 1 && points <= 21) cfg.pointsToWinSet = points;
+  if (Number.isInteger(sets) && sets >= 1 && sets <= 5) cfg.setsToWin = sets;
+  return cfg;
+}
+const matchConfig = matchConfigFromLocation();
 const anyPhone = computed(() => hub.view.slots.some((s) => s.status === 'connected'));
 
 const keyHelp = (side: Side) =>
@@ -53,7 +65,7 @@ const returnUrls = computed<Record<Side, string | null>>(() => {
 
 function startMatch(sources: [InputSource, InputSource], visible: Side[], phones: Side[]): void {
   stopMatch();
-  const s = new GameSession(sources);
+  const s = new GameSession(sources, undefined, matchConfig);
   sides.value = visible;
   phoneSides.value = phones;
   for (const side of [0, 1] as const) hub.inputs[side].setActive(phones.includes(side));
@@ -221,6 +233,13 @@ onMounted(() => {
     }),
     paused: () => session.value?.pauseReasons() ?? [],
     paddles: () => session.value?.match.players.map((p) => ({ lateral: p.lateral, x: p.paddle.pos.x })) ?? [],
+    sources: () => session.value?.sources.map((s) => s.kind) ?? [],
+    testAwardPoint: (side: Side) => session.value?.debugAwardPoint(side),
+    testHide: () => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    },
   };
 });
 onBeforeUnmount(() => {
@@ -233,8 +252,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <button type="button" class="corner fullscreen" title="Preko cijelog zaslona" @click="toggleFullscreen">⛶</button>
-  <button type="button" class="corner diag-btn" title="Dijagnostika (F2)" data-testid="diag-toggle" @click="showDiag = !showDiag">
+  <button type="button" class="corner fullscreen" :class="{ low: session }" title="Preko cijelog zaslona" @click="toggleFullscreen">⛶</button>
+  <button type="button" class="corner diag-btn" :class="{ low: session }" title="Dijagnostika (F2)" data-testid="diag-toggle" @click="showDiag = !showDiag">
     ⚙
   </button>
   <MatchView
@@ -279,6 +298,11 @@ onBeforeUnmount(() => {
 }
 .fullscreen {
   left: calc(50% - 2.6rem);
+}
+/* During a match keep the buttons off the score bars. */
+.corner.low {
+  top: auto;
+  bottom: 2.4rem;
 }
 .diag-btn {
   left: calc(50% + 0.2rem);

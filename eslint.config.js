@@ -28,6 +28,10 @@ export default tseslint.config(
     languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
   },
   {
+    files: ['apps/game/public/sw.js'],
+    languageOptions: { globals: { self: 'readonly', caches: 'readonly', fetch: 'readonly', URL: 'readonly' } },
+  },
+  {
     files: ['packages/sim/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', { patterns: ['vue', 'three', '@tresjs/*'] }],

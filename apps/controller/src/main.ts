@@ -1,4 +1,12 @@
-import { ControllerClient, PAIRING_ERROR_TEXT, REJECT_TEXT, newClientId, normalizeRoomCode, type ControllerState } from '@mobitenis/net';
+import {
+  ControllerClient,
+  PAIRING_ERROR_TEXT,
+  REJECT_TEXT,
+  newClientId,
+  normalizeRoomCode,
+  registerOfflineCache,
+  type ControllerState,
+} from '@mobitenis/net';
 import {
   PLAYER_COLORS,
   PLAYER_NAMES,
@@ -291,6 +299,9 @@ ui.join.addEventListener('submit', (e) => {
   const v = ui.slot.value;
   connect(room, v === '0' ? 0 : v === '1' ? 1 : null, null);
 });
+
+// The service worker lives next to the game, one level up.
+if (import.meta.env.PROD) registerOfflineCache('../sw.js', '../');
 
 if (params.room) connect(params.room, params.slot, params.token);
 else {
