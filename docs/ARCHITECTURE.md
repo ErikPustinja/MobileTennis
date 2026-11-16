@@ -241,3 +241,18 @@ on recordings. Constants are in `GESTURE` in `packages/sim/src/config.ts`.
   phone held in landscape gives the same result. The traces are synthetic
   until real recordings arrive (needs-human issue #6); real ones get the same
   expectations.
+
+## Offline caching
+
+`apps/game/public/sw.js` is a small hand-written service worker at the site
+root (scope covers the controller at `c/` too). It answers network-first
+and falls back to the cache, so the game and controller always load fresh
+when online and still open offline after the first visit. Pages hand it
+the URLs they loaded before it existed, so even the first visit is cached.
+Pairing still needs the signalling server; offline the game shows "Nema
+internetske veze" with what to do.
+
+## Match options
+
+`?points=N&sets=M` shortens matches (points per set, sets to win), useful
+for testing and quick games. Defaults: 11 points, best of three.

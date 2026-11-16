@@ -17,6 +17,11 @@ test('keyboard match: serve, rally and score in both halves', async ({ page }, i
     }, { timeout: 75_000, intervals: [500] })
     .toBe(true);
   await stopAutoplay(page);
+  await page.screenshot({ path: info.outputPath('split-screen.png') });
+  await page.screenshot({ path: 'test-results/split-screen.png' });
+  // Freeze the match so both halves are read at the same moment.
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('pause')).toBeVisible();
 
   const s = await stats(page);
   // Each half shows the same score from its own perspective.
@@ -29,8 +34,6 @@ test('keyboard match: serve, rally and score in both halves', async ({ page }, i
   expect(other0).toBe(own1);
   expect(own0 + other0).toBeLessThanOrEqual(s.points);
 
-  await page.screenshot({ path: info.outputPath('split-screen.png') });
-  await page.screenshot({ path: 'test-results/split-screen.png' });
 });
 
 test('the same sideways key moves the racket right in each player\'s own view', async ({ page }) => {

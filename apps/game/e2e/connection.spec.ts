@@ -59,8 +59,11 @@ test('two phones pair over WebRTC, control their own paddles and survive a drop'
   await expect(game.getByTestId('slot-status-0')).toHaveAttribute('data-status', 'connected');
   await expect(game.getByTestId('slot-status-1')).toHaveAttribute('data-status', 'connected');
 
+  // Phones were opened last; make sure the game tab is the visible one.
+  await game.bringToFront();
   await game.getByTestId('play').click();
   await expect(game.getByTestId('hud-0')).toBeVisible();
+  expect(await g(game, (h) => h.paused())).toEqual([]);
   await expect(game.getByTestId('hud-1')).toBeVisible();
 
   // Each phone moves only its own paddle.
@@ -71,7 +74,16 @@ test('two phones pair over WebRTC, control their own paddles and survive a drop'
   await expect.poll(async () => (await lat())[0]! - before[0]!).toBeGreaterThan(0.05);
   expect(Math.abs((await lat())[1]! - before[1]!)).toBeLessThan(0.01);
 
-  const mid = await lat();
+  // The sim follows the paddle target at a limited rate: wait until it has settled.
+  let mid = await lat();
+  await expect
+    .poll(async () => {
+      const now = await lat();
+      const settled = Math.abs(now[0]! - mid[0]!) < 1e-4;
+      mid = now;
+      return settled;
+    })
+    .toBe(true);
   await c(p2, (h, t) => h.injectTrace(t), trace('bocni-lijevo'));
   await expect.poll(async () => (await lat())[1]! - mid[1]!).toBeLessThan(-0.05);
   expect(Math.abs((await lat())[0]! - mid[0]!)).toBeLessThan(0.01);

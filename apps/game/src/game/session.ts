@@ -1,9 +1,11 @@
 import {
   DT,
+  awardPoint,
   createMatch,
   resetMatch,
   setPaused,
   stepMatch,
+  type MatchConfig,
   type MatchEvent,
   type MatchState,
   type PlayerInput,
@@ -29,9 +31,9 @@ export class GameSession {
   /** Last inputs fed to the sim, for the renderer and diagnostics. */
   readonly lastInputs: [PlayerInput, PlayerInput];
 
-  constructor(sources: [InputSource, InputSource], seed = Date.now() >>> 0) {
+  constructor(sources: [InputSource, InputSource], seed = Date.now() >>> 0, config: Partial<MatchConfig> = {}) {
     this.sources = sources;
-    this.match = createMatch({ seed });
+    this.match = createMatch({ seed, config });
     const a = sources[0].next(this.match);
     const b = sources[1].next(this.match);
     this.lastInputs = [a, b];
@@ -80,6 +82,15 @@ export class GameSession {
     stepMatch(m, [a, b]);
     if (collect) collect.push(...m.events);
     else if (m.events.length > 0) this.emit(m.events);
+  }
+
+  /** Test hook: awards a point directly, as if a rally had ended. */
+  debugAwardPoint(side: Side): void {
+    const m = this.match;
+    const events: MatchEvent[] = [{ type: 'point', winner: side, reason: 'not-returned' }];
+    awardPoint(m.score, side, m.config, events);
+    if (m.score.winner !== null) m.rally.phase = 'matchOver';
+    this.emit(events);
   }
 
   rematch(): void {
