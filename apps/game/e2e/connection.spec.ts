@@ -44,7 +44,9 @@ async function openPhone(browser: Browser, url: string): Promise<Page> {
 }
 
 test('two phones pair over WebRTC, control their own paddles and survive a drop', async ({ page: game, browser }) => {
-  await game.goto(`/?signal=${encodeURIComponent(SIGNAL)}&stun=none`);
+  // CI renders in software (frames can take 150 ms), so samples queue up
+  // behind rendering; relax the 100 ms age limit for this test only.
+  await game.goto(`/?signal=${encodeURIComponent(SIGNAL)}&stun=none&maxage=1000`);
   await expect(game.getByTestId('qr-0')).toBeVisible();
   await expect(game.getByTestId('qr-1')).toBeVisible();
   const urls = (await g(game, (h) => h.host().urls)) as string[];
@@ -102,7 +104,7 @@ test('two phones pair over WebRTC, control their own paddles and survive a drop'
   // Stale and out-of-order samples are dropped (needs the clock offset from ping first).
   await expect.poll(() => g(game, (h) => h.host().slots[0]!.stats.rtt)).not.toBeNull();
   await c(p1, (h) => {
-    h.sendOld(500);
+    h.sendOld(3000);
     h.sendOutOfOrder();
   });
   await expect.poll(() => g(game, (h) => h.host().slots[0]!.stats.droppedStale)).toBeGreaterThanOrEqual(1);

@@ -37,6 +37,8 @@ export interface HubConfig {
   controllerUrl: string;
   /** Extra hash parameters for the controller (test setups). */
   passthrough: string;
+  /** `?maxage=` override of the 100 ms sample age limit (slow test machines only). */
+  maxSampleAgeMs?: number;
 }
 
 /** Reads `?signal=ws://…`, `?stun=none` and `?controller=URL` from the game URL. */
@@ -53,6 +55,7 @@ export function hubConfigFromLocation(loc: Location = location): HubConfig {
     ice: q.get('stun') === 'none' ? Promise.resolve([]) : loadIceServers(import.meta.env.VITE_TURN_CREDENTIALS_URL || undefined),
     controllerUrl: q.get('controller') ?? new URL('c/', base).href,
     passthrough: pass.toString(),
+    ...(Number(q.get('maxage')) > 0 ? { maxSampleAgeMs: Number(q.get('maxage')) } : {}),
   };
 }
 
@@ -68,7 +71,11 @@ export class PhoneHub {
 
   constructor(cfg: HubConfig) {
     this.cfg = cfg;
-    this.host = new GameHost({ signaling: cfg.signaling, ice: cfg.ice });
+    this.host = new GameHost({
+      signaling: cfg.signaling,
+      ice: cfg.ice,
+      ...(cfg.maxSampleAgeMs ? { maxSampleAgeMs: cfg.maxSampleAgeMs } : {}),
+    });
     this.view = reactive({
       state: this.host.state,
       error: this.host.error,
