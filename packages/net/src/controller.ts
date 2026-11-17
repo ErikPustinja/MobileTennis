@@ -194,8 +194,10 @@ export class ControllerClient {
   private onLinkClosed(link: RtcLink): void {
     if (link !== this.link) return;
     this.link = null;
-    if (this.state.kind === 'connected') this.attempt = 1;
-    this.scheduleReconnect(null);
+    const wasConnected = this.state.kind === 'connected';
+    if (wasConnected) this.attempt = 1;
+    // Closing before the game ever said welcome means the direct path failed.
+    this.scheduleReconnect(wasConnected ? null : 'ice-failed');
   }
 
   private onText(text: string): void {
