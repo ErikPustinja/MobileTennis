@@ -11,6 +11,8 @@ export interface GameHostOptions {
   now?: () => number;
   /** Fixed room code (tests); otherwise random. */
   room?: string;
+  /** Oldest accepted sample age (ms); default 100. Tests on slow CI machines raise it. */
+  maxSampleAgeMs?: number;
 }
 
 export type HostState = 'starting' | 'ready' | 'error';
@@ -62,7 +64,11 @@ export class GameHost {
   }
 
   private makeCore(room: string): HostCore {
-    const core = new HostCore({ room, now: this.opts.now ?? (() => performance.now()) });
+    const core = new HostCore({
+      room,
+      now: this.opts.now ?? (() => performance.now()),
+      ...(this.opts.maxSampleAgeMs ? { maxSampleAgeMs: this.opts.maxSampleAgeMs } : {}),
+    });
     for (const [k, fn] of Object.entries(this.handlers)) core.on(k as keyof HostEvents, fn as never);
     return core;
   }

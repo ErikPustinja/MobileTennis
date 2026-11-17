@@ -7,7 +7,7 @@ Adresa igre: **https://erikpustinja.github.io/MobileTennis/**
 Potrebno:
 - računalo s Chromeom ili Edgeom
 - jedan ili dva Android mobitela s Chromeom
-- internet na računalu i mobitelima; s posrednikom (korak 2) mreže mogu biti različite, bez njega moraju biti iste
+- internet na računalu i mobitelima (mreže mogu biti različite)
 
 ---
 
@@ -22,17 +22,14 @@ Potrebno:
 
 ### 2. Posrednik za igru s bilo koje mreže (TURN)
 
-Bez ovoga mobitel i računalo moraju biti na istoj mreži, a ni tada ne radi svugdje (npr. hotspot ili vatrozid). S posrednikom mobitel može biti i na mobilnim podacima.
+Ne treba ništa postavljati. Kad mobitel i računalo ne mogu razgovarati izravno (različite mreže, mobilni podaci, hotspot, vatrozid), igra sama koristi besplatni javni posrednik **Open Relay**, za koji ne treba račun. Na istom Wi-Fiju promet i dalje ide izravno.
 
-1. Otvori https://www.metered.ca/tools/openrelay/ i napravi besplatan račun (Open Relay, 20 GB mjesečno besplatno).
-2. U nadzornoj ploči otvori **TURN Server → Credentials / API** i kopiraj adresu oblika
-   `https://<ime-aplikacije>.metered.live/api/v1/turn/credentials?apiKey=<ključ>`
-   (u njihovim uputama piše kao primjer za `fetch`).
-3. Otvori https://github.com/ErikPustinja/MobileTennis/settings/variables/actions, klikni **New repository variable**:
-   - **Name:** `TURN_CREDENTIALS_URL`
-   - **Value:** adresa iz koraka 2
-4. Pokreni objavu ponovno: https://github.com/ErikPustinja/MobileTennis/actions/workflows/deploy.yml → **Run workflow**.
-5. Provjera: u igri pritisni **F2**; gore mora pisati **Posrednik (TURN): postavljen**.
+Provjera: u igri pritisni **F2**; gore piše **Posrednik (TURN): postavljen**. Kad je mobitel spojen preko posrednika, pod **Veza** piše „preko posrednika“.
+
+Samo ako javni posrednik ne radi ili se potroši njegova kvota, možeš postaviti vlastiti ključ:
+1. Napravi račun na https://www.metered.ca/tools/openrelay/ i kopiraj adresu oblika `https://<ime>.metered.live/api/v1/turn/credentials?apiKey=<ključ>`.
+2. Na https://github.com/ErikPustinja/MobileTennis/settings/variables/actions dodaj varijablu `TURN_CREDENTIALS_URL` s tom adresom.
+3. Ponovno pokreni objavu: https://github.com/ErikPustinja/MobileTennis/actions/workflows/deploy.yml → **Run workflow**.
 
 ### 3. Provjeri adresu igre
 
