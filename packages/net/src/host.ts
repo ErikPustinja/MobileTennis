@@ -6,7 +6,8 @@ import { PeerJsSignaling, PUBLIC_SIGNALING, SignalingError, type SignalMessage, 
 
 export interface GameHostOptions {
   signaling?: SignalingConfig;
-  ice?: RTCIceServer[];
+  /** ICE servers, or a promise of them (TURN credentials are fetched at startup). */
+  ice?: RTCIceServer[] | Promise<RTCIceServer[]>;
   now?: () => number;
   /** Fixed room code (tests); otherwise random. */
   room?: string;
@@ -113,7 +114,7 @@ export class GameHost {
     if (m.type === 'OFFER') {
       if (this.links.has(key)) return;
       try {
-        const link = await RtcLink.answer(this.signaling!, src, payload, this.opts.ice ?? DEFAULT_ICE);
+        const link = await RtcLink.answer(this.signaling!, src, payload, (await this.opts.ice) ?? DEFAULT_ICE);
         this.links.set(key, link);
         link.onClose = () => this.links.delete(key);
         await link.ready;

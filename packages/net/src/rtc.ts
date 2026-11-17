@@ -2,8 +2,10 @@ import type { ConnectionKind } from '@mobitenis/protocol';
 import type { Link } from './link.ts';
 import type { Signaling } from './signaling.ts';
 
-/** Public STUN only; no TURN relay is configured. */
-export const DEFAULT_ICE: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }];
+import { STUN_SERVERS } from './ice.ts';
+
+/** STUN only; a TURN relay is added at runtime when configured (see ice.ts). */
+export const DEFAULT_ICE: RTCIceServer[] = STUN_SERVERS;
 
 export interface RtcSignalPayload {
   /** Distinguishes reconnect attempts from the same phone. */

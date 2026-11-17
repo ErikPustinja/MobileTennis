@@ -1,7 +1,8 @@
 import { reactive } from 'vue';
 import {
-  DEFAULT_ICE,
   GameHost,
+  hasRelay,
+  loadIceServers,
   PUBLIC_SIGNALING,
   type HostState,
   type PairingError,
@@ -25,11 +26,13 @@ export interface HubView {
   error: PairingError | null;
   room: string;
   slots: [SlotView, SlotView];
+  /** Whether a TURN relay is configured (null while loading). */
+  relay: boolean | null;
 }
 
 export interface HubConfig {
   signaling: SignalingConfig;
-  ice: RTCIceServer[];
+  ice: Promise<RTCIceServer[]>;
   /** Absolute URL of the controller page (ends with "/"). */
   controllerUrl: string;
   /** Extra hash parameters for the controller (test setups). */
@@ -46,7 +49,8 @@ export function hubConfigFromLocation(loc: Location = location): HubConfig {
   const base = `${loc.origin}${loc.pathname.replace(/[^/]*$/, '')}`;
   return {
     signaling: signal ? { url: signal, key: 'peerjs' } : PUBLIC_SIGNALING,
-    ice: q.get('stun') === 'none' ? [] : DEFAULT_ICE,
+    // `?stun=none` (tests) uses no ICE servers at all; otherwise STUN plus the TURN relay, if configured.
+    ice: q.get('stun') === 'none' ? Promise.resolve([]) : loadIceServers(import.meta.env.VITE_TURN_CREDENTIALS_URL || undefined),
     controllerUrl: q.get('controller') ?? new URL('c/', base).href,
     passthrough: pass.toString(),
   };
@@ -70,7 +74,11 @@ export class PhoneHub {
       error: this.host.error,
       room: this.host.room,
       slots: [this.slotView(0), this.slotView(1)],
+      relay: null,
     }) as HubView;
+    void cfg.ice.then((servers) => {
+      this.view.relay = hasRelay(servers);
+    });
     this.host.on('sample', (slot, s) => this.inputs[slot].push(s));
     this.host.on('command', (slot, cmd) => {
       if (cmd === 'calibrate') this.inputs[slot].calibrate();

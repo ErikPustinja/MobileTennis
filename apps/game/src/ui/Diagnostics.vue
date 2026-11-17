@@ -42,6 +42,9 @@ const fmtRange = (r: { min: number; max: number }) => `${r.min.toFixed(1)} … $
     <header>
       <h2>Dijagnostika</h2>
       <span>Soba {{ hub.view.room }} · {{ fps.toFixed(0) }} FPS</span>
+      <span data-testid="relay">
+        Posrednik (TURN): {{ hub.view.relay === null ? '…' : hub.view.relay ? 'postavljen' : 'nije postavljen – radi samo na istoj mreži' }}
+      </span>
       <button type="button" @click="emit('close')">Zatvori</button>
     </header>
     <div class="cols">
