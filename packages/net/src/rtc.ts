@@ -31,6 +31,8 @@ export class RtcLink implements Link {
   private readonly remoteId: string;
   private readonly pendingCandidates: RTCIceCandidateInit[] = [];
   private closed = false;
+  /** Types of local ICE candidates gathered so far (host, srflx, relay, prflx). */
+  readonly gathered: Record<string, number> = {};
   onText: ((text: string) => void) | null = null;
   onBinary: ((data: ArrayBuffer) => void) | null = null;
   onClose: (() => void) | null = null;
@@ -50,6 +52,8 @@ export class RtcLink implements Link {
     });
     this.ready.catch(() => {});
     this.pc.onicecandidate = (e) => {
+      const type = e.candidate?.type;
+      if (type) this.gathered[type] = (this.gathered[type] ?? 0) + 1;
       this.signaling.send('CANDIDATE', this.remoteId, {
         connectionId: this.id,
         candidate: e.candidate ? e.candidate.toJSON() : null,

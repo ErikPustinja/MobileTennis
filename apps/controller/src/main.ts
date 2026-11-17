@@ -4,6 +4,7 @@ import {
   REJECT_TEXT,
   newClientId,
   normalizeRoomCode,
+  hasRelay,
   registerOfflineCache,
   type ControllerState,
 } from '@mobitenis/net';
@@ -48,6 +49,10 @@ const CONN_TEXT: Record<ConnectionKind, string> = {
 const MIN_RATE = 30;
 
 const params = readParams();
+let relayConfigured: boolean | null = null;
+void params.ice.then((servers) => {
+  relayConfigured = hasRelay(servers);
+});
 const sensors = new Sensors();
 const stats = new SensorStats();
 let client: ControllerClient | null = null;
@@ -95,8 +100,10 @@ function renderState(s: ControllerState): void {
         : 'Pritisni Omogući senzore.';
       break;
     case 'reconnecting':
-      ui.conn.textContent = 'Ponovno spajanje…';
+      ui.conn.textContent = `Ponovno spajanje… (${s.attempt})`;
       ui.message.textContent = s.error ? PAIRING_ERROR_TEXT[s.error] : 'Veza je prekinuta, vraćam se na isto mjesto…';
+      // Show what was tried, so the cause is visible without digging.
+      if (s.error && s.attempt >= 3) ($('diag') as HTMLDetailsElement).open = true;
       break;
     case 'rejected':
       ui.conn.textContent = 'Odbijeno';
@@ -212,7 +219,11 @@ function renderDiag(): void {
   stats.roll();
   const ws = warnings();
   ui.warnings.replaceChildren(...ws.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
+  const la = client?.lastAttempt;
+  const g = la?.gathered ?? {};
   const lines = [
+    `Posrednik (TURN): ${relayConfigured === null ? '…' : relayConfigured ? 'postavljen' : 'nije dostupan'}`,
+    `Zadnji pokušaj: ICE ${la?.ice ?? '–'}, putevi host ${g.host ?? 0}, javni ${g.srflx ?? 0}, posrednik ${g.relay ?? 0}${la?.error ? `, greška ${la.error}` : ''}`,
     `Uzorci: ${stats.rate.toFixed(1)} Hz`,
     `Poslano: ${client?.sent ?? 0}, preskočeno (zagušenje): ${client?.skipped ?? 0}`,
     `Odbačeno u igri: ${net?.dropped ?? '–'}`,

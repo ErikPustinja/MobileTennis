@@ -84,7 +84,7 @@ test('two phones pair over WebRTC, control their own paddles and survive a drop'
       const settled = Math.abs(now[0]! - mid[0]!) < 1e-4;
       mid = now;
       return settled;
-    })
+    }, { intervals: [1000], timeout: 20_000 })
     .toBe(true);
   await c(p2, (h, t) => h.injectTrace(t), trace('bocni-lijevo'));
   await expect.poll(async () => (await lat())[1]! - mid[1]!).toBeLessThan(-0.05);

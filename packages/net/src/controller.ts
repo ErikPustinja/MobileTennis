@@ -52,6 +52,9 @@ export class ControllerClient {
   /** Samples not sent because the channel was backed up. */
   skipped = 0;
   sent = 0;
+  /** Last connection attempt, for the phone's diagnostics. */
+  lastAttempt: { gathered: Record<string, number>; ice: string; error: PairingError | null } | null = null;
+  private lastError: PairingError | null = null;
   private key = 0;
   private seq = 0;
   private link: RtcLink | null = null;
@@ -152,8 +155,11 @@ export class ControllerClient {
   private async connect(): Promise<void> {
     if (this.stopped) return;
     this.attempt++;
+    // Keep showing the last error while retrying, so it does not flicker away.
     this.setState(
-      this.attempt === 1 ? { kind: 'connecting', attempt: 1 } : { kind: 'reconnecting', attempt: this.attempt, error: null },
+      this.attempt === 1
+        ? { kind: 'connecting', attempt: 1 }
+        : { kind: 'reconnecting', attempt: this.attempt, error: this.lastError },
     );
     let error: PairingError = 'timeout';
     try {
@@ -161,6 +167,10 @@ export class ControllerClient {
       const connectionId = randomString(8, 'abcdefghijkmnopqrstuvwxyz23456789');
       const link = await RtcLink.offer(sig, hostPeerId(this.opts.room), connectionId, (await this.opts.ice) ?? DEFAULT_ICE);
       this.link = link;
+      this.lastAttempt = { gathered: link.gathered, ice: 'new', error: null };
+      link.pc.addEventListener('iceconnectionstatechange', () => {
+        if (this.lastAttempt) this.lastAttempt.ice = link.pc.iceConnectionState;
+      });
       link.onText = (t) => this.onText(t);
       link.onClose = () => this.onLinkClosed(link);
       await withTimeout(link.ready, CONNECT_TIMEOUT_MS);
@@ -184,6 +194,8 @@ export class ControllerClient {
 
   private scheduleReconnect(error: PairingError | null): void {
     if (this.stopped || this.state.kind === 'rejected' || this.timer) return;
+    this.lastError = error;
+    if (this.lastAttempt) this.lastAttempt.error = error;
     this.setState({ kind: 'reconnecting', attempt: this.attempt, error });
     const delay = Math.min(RECONNECT_DELAY_MS * 2 ** Math.max(0, this.attempt - 2), 3_000);
     this.timer = setTimeout(() => {
@@ -211,6 +223,7 @@ export class ControllerClient {
         this.key = msg.key;
         this.seq = 0;
         this.attempt = 0;
+        this.lastError = null;
         this.opts.onIdentity?.(msg.slot, msg.token);
         this.setState({ kind: 'connected', slot: msg.slot });
         for (const [id, cmd] of this.pending) this.sendCommand(id, cmd);
