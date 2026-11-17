@@ -170,10 +170,14 @@ The original spec said "public STUN, no TURN". The owner later asked for the
 game to work from **any** network (mobile data, hotspots, networks that
 block direct traffic), which needs a relay. So:
 
-- ICE always gets public STUN (Google, Cloudflare). If the build has
-  `VITE_TURN_CREDENTIALS_URL`, both the game and the controller fetch TURN
-  credentials from it at startup (`packages/net/src/ice.ts`) and add the
-  relay. If the URL is missing or the fetch fails, they fall back to STUN.
+- ICE always gets public STUN (Google, Cloudflare) plus a TURN relay
+  (`packages/net/src/ice.ts`). By default the relay is Metered's public
+  **Open Relay** "static auth" server, which needs no account: credentials
+  are computed in the browser with the standard TURN REST scheme
+  (`<expiry>:<id>` signed with HMAC-SHA1 of the published shared secret).
+  If the build has `VITE_TURN_CREDENTIALS_URL` (own provider account),
+  both sides fetch credentials from it instead and fall back to Open Relay
+  if that fails.
 - ICE prefers direct candidate pairs, so on the same Wi-Fi traffic still goes
   directly; the relay is used only when no direct path works. Diagnostics
   show which one was chosen ("preko posrednika" = relay) and whether a relay
