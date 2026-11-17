@@ -164,10 +164,33 @@ phone (controller page)  ── WebRTC DataChannels (direct) ──>  desktop br
 - **Manual code entry.** Without a QR link the phone can type the 5-letter
   room code; the game assigns a free slot and returns its token.
 
+### Reaching the game from any network (TURN fallback)
+
+The original spec said "public STUN, no TURN". The owner later asked for the
+game to work from **any** network (mobile data, hotspots, networks that
+block direct traffic), which needs a relay. So:
+
+- ICE always gets public STUN (Google, Cloudflare). If the build has
+  `VITE_TURN_CREDENTIALS_URL`, both the game and the controller fetch TURN
+  credentials from it at startup (`packages/net/src/ice.ts`) and add the
+  relay. If the URL is missing or the fetch fails, they fall back to STUN.
+- ICE prefers direct candidate pairs, so on the same Wi-Fi traffic still goes
+  directly; the relay is used only when no direct path works. Diagnostics
+  show which one was chosen ("preko posrednika" = relay) and whether a relay
+  is configured at all.
+- The deploy workflow takes the URL from the repository variable
+  `TURN_CREDENTIALS_URL`. It is not a secret in the strict sense: anything
+  a static page uses is visible to its visitors. Use a provider key that
+  can only fetch TURN credentials (Metered Open Relay's API key is designed
+  for this) and keep an eye on the monthly quota.
+- Traffic is small: a 64-byte sample at about 60 Hz per phone is roughly
+  4 kB/s before protocol overhead, so a free tier of a few GB lasts many
+  hours of relayed play.
+
 ### Direct connection on the local network
 
-Only public STUN is configured, no TURN. Known risk and what the game does
-about it:
+Without a relay only public STUN is available. Known risk and what the game
+does about it:
 
 - Desktop Chrome replaces private IPs in its ICE host candidates with random
   `.local` mDNS names; the other side has to resolve them over multicast DNS.

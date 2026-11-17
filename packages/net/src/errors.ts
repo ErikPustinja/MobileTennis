@@ -9,7 +9,7 @@ export const PAIRING_ERROR_TEXT: Record<PairingError, string> = {
     'Signalizacijski poslužitelj nije dostupan. Provjeri internet; ako radi, poslužitelj je možda privremeno nedostupan – pokušaj ponovno za minutu.',
   'signaling-lost': 'Veza sa signalizacijskim poslužiteljem je prekinuta. Pokušavam ponovno…',
   'ice-failed':
-    'Izravna veza mobitela i računala nije uspjela. Spoji oba uređaja na isti Wi-Fi; ako jesu, vatrozid na računalu ili mreža možda blokira WebRTC (npr. gostujuća ili školska mreža, hotspot).',
+    'Veza mobitela i računala nije uspjela. Provjeri internet na oba uređaja. Ako posrednik (TURN) nije postavljen, uređaji moraju biti na istoj mreži, a vatrozid na računalu ne smije blokirati preglednik.',
   timeout: 'Spajanje traje predugo. Provjeri da su mobitel i računalo na istom Wi-Fiju pa pokušaj ponovno.',
 };
 

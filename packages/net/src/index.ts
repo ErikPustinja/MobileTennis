@@ -8,3 +8,4 @@ export * from './rtc.ts';
 export * from './host.ts';
 export * from './controller.ts';
 export * from './offline-cache.ts';
+export * from './ice.ts';

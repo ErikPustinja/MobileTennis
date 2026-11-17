@@ -7,7 +7,7 @@ Adresa igre: **https://erikpustinja.github.io/MobileTennis/**
 Potrebno:
 - računalo s Chromeom ili Edgeom
 - jedan ili dva Android mobitela s Chromeom
-- Wi-Fi na koji su spojeni i računalo i mobiteli; internet treba samo za uparivanje
+- internet na računalu i mobitelima; s posrednikom (korak 2) mreže mogu biti različite, bez njega moraju biti iste
 
 ---
 
@@ -20,13 +20,27 @@ Potrebno:
 3. Otvori https://github.com/ErikPustinja/MobileTennis/actions/workflows/deploy.yml i klikni **Run workflow → Run workflow** (ili pričekaj sljedeći merge u `main`).
 4. Kad se pokretanje završi zelenom kvačicom (oko dvije minute), igra je na adresi iznad.
 
-### 2. Provjeri adresu igre
+### 2. Posrednik za igru s bilo koje mreže (TURN)
+
+Bez ovoga mobitel i računalo moraju biti na istoj mreži, a ni tada ne radi svugdje (npr. hotspot ili vatrozid). S posrednikom mobitel može biti i na mobilnim podacima.
+
+1. Otvori https://www.metered.ca/tools/openrelay/ i napravi besplatan račun (Open Relay, 20 GB mjesečno besplatno).
+2. U nadzornoj ploči otvori **TURN Server → Credentials / API** i kopiraj adresu oblika
+   `https://<ime-aplikacije>.metered.live/api/v1/turn/credentials?apiKey=<ključ>`
+   (u njihovim uputama piše kao primjer za `fetch`).
+3. Otvori https://github.com/ErikPustinja/MobileTennis/settings/variables/actions, klikni **New repository variable**:
+   - **Name:** `TURN_CREDENTIALS_URL`
+   - **Value:** adresa iz koraka 2
+4. Pokreni objavu ponovno: https://github.com/ErikPustinja/MobileTennis/actions/workflows/deploy.yml → **Run workflow**.
+5. Provjera: u igri pritisni **F2**; gore mora pisati **Posrednik (TURN): postavljen**.
+
+### 3. Provjeri adresu igre
 
 Otvori https://erikpustinja.github.io/MobileTennis/ na računalu. Trebao bi se pojaviti početni zaslon s dva QR koda, za Igrača 1 (narančasti) i Igrača 2 (plavi).
 
 Ako umjesto QR koda piše da signalizacijski poslužitelj nije dostupan, provjeri internet i osvježi stranicu za minutu. Igra tipkovnicom radi i bez toga.
 
-### 3. Dopuštenja koja traži Chrome na mobitelu
+### 4. Dopuštenja koja traži Chrome na mobitelu
 
 - **Kamera** (samo za skeniranje QR koda): otvori aplikaciju Kamera, usmjeri je na QR kod i dodirni poveznicu koja se pojavi. Ako je ne prepoznaje, koristi Google Lens ili u Chromeu dodirni ikonu kamere u adresnoj traci.
 - **Senzori pokreta:** Chrome na Androidu ih obično daje bez pitanja. Ako kontroler javi da senzori ne šalju podatke, u Chromeu otvori **⋮ → Postavke → Postavke web-lokacije → Senzori pokreta** i dopusti ih, za `erikpustinja.github.io` ili općenito.

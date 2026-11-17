@@ -1,4 +1,4 @@
-import { normalizeRoomCode, PUBLIC_SIGNALING, DEFAULT_ICE, type SignalingConfig } from '@mobitenis/net';
+import { loadIceServers, normalizeRoomCode, PUBLIC_SIGNALING, type SignalingConfig } from '@mobitenis/net';
 import type { Slot } from '@mobitenis/protocol';
 
 export interface LaunchParams {
@@ -6,7 +6,7 @@ export interface LaunchParams {
   slot: Slot | null;
   token: string | null;
   signaling: SignalingConfig;
-  ice: RTCIceServer[];
+  ice: Promise<RTCIceServer[]>;
   /** Extra hash parameters to keep when building links (test setups). */
   passthrough: string;
 }
@@ -24,7 +24,7 @@ export function readParams(hash = location.hash): LaunchParams {
     slot: s === '0' ? 0 : s === '1' ? 1 : null,
     token: p.get('t'),
     signaling: sig ? { url: sig, key: 'peerjs' } : PUBLIC_SIGNALING,
-    ice: p.get('stun') === 'none' ? [] : DEFAULT_ICE,
+    ice: p.get('stun') === 'none' ? Promise.resolve([]) : loadIceServers(import.meta.env.VITE_TURN_CREDENTIALS_URL || undefined),
     passthrough: pass.toString(),
   };
 }

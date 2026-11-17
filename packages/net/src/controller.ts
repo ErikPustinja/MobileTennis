@@ -28,7 +28,8 @@ export interface ControllerOptions {
   token: string | null;
   clientId?: string;
   signaling?: SignalingConfig;
-  ice?: RTCIceServer[];
+  /** ICE servers, or a promise of them (TURN credentials are fetched at startup). */
+  ice?: RTCIceServer[] | Promise<RTCIceServer[]>;
   ua?: string;
   /** Called when the game assigns or confirms a slot and token (to remember them). */
   onIdentity?: (slot: Slot, token: string) => void;
@@ -158,7 +159,7 @@ export class ControllerClient {
     try {
       const sig = await this.ensureSignaling();
       const connectionId = randomString(8, 'abcdefghijkmnopqrstuvwxyz23456789');
-      const link = await RtcLink.offer(sig, hostPeerId(this.opts.room), connectionId, this.opts.ice ?? DEFAULT_ICE);
+      const link = await RtcLink.offer(sig, hostPeerId(this.opts.room), connectionId, (await this.opts.ice) ?? DEFAULT_ICE);
       this.link = link;
       link.onText = (t) => this.onText(t);
       link.onClose = () => this.onLinkClosed(link);
